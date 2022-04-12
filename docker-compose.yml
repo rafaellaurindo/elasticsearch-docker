@@ -1,0 +1,44 @@
+version: "3.7"
+services:
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+        ports:
+            - "${ES_PORT}:9200"
+        networks:
+            - elastic
+        mem_limit: ${MEM_LIMIT}
+        environment:
+            - node.name=elasticsearch
+            - ELASTIC_PASSWORD="${ELASTIC_PASSWORD}"
+            - cluster.name=${CLUSTER_NAME}
+            - cluster.initial_master_nodes=elasticsearch
+            - xpack.security.enabled=false
+            - xpack.license.self_generated.type=${LICENSE}
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+        ports:
+            - "${KIBANA_PORT}:5601"
+        depends_on:
+            - elasticsearch
+        networks:
+            - elastic
+        environment:
+            - SERVERNAME=kibana
+            - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+            - ELASTICSEARCH_USERNAME="${KIBANA_USERNAME}"
+            - ELASTICSEARCH_PASSWORD="${KIBANA_PASSWORD}"
+        mem_limit: ${MEM_LIMIT}
+        volumes:
+            - kibanadata:/usr/share/kibana/data
+
+volumes:
+    esdata:
+        driver: local
+    kibanadata:
+        driver: local
+
+networks:
+    elastic:
